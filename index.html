@@ -1,0 +1,2203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ascend Fit OS</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: 'var(--bg)',
+                        card: 'var(--card)',
+                        text: 'var(--text)',
+                        subtext: 'var(--subtext)',
+                        accent: 'var(--accent)',
+                        'accent-glow': 'var(--accent-glow)',
+                        primary: '#6366F1',
+                        border: 'var(--border)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'in': 'fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px) scale(0.98)' },
+                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            /* Default Dark Mode Variables */
+            --bg: #030305;
+            --card: rgba(20, 20, 35, 0.6);
+            --text: #E2E8F0;
+            --subtext: #94A3B8;
+            --accent: #00E676;
+            --accent-glow: rgba(0, 230, 118, 0.5);
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Light Mode Override */
+        .light-theme {
+            --bg: #F1F5F9;
+            --card: rgba(255, 255, 255, 0.7);
+            --text: #0F172A;
+            --subtext: #64748B;
+            --border: rgba(0, 0, 0, 0.1);
+        }
+
+        body { 
+            background-color: var(--bg);
+            color: var(--text);
+            overflow-x: hidden; 
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .bg-mesh {
+            background: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, var(--accent-glow) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(56, 189, 248, 0.1) 0px, transparent 50%);
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            filter: blur(40px);
+            opacity: 0.6;
+        }
+        
+        .glass-panel {
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        }
+        .glass-panel-heavy {
+            background: var(--card);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--border);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .slide-up-fade {
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes slideUpFade {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .glow-text {
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+        
+        /* Privacy Blur Utility */
+        .privacy-blur {
+            filter: blur(6px);
+            user-select: none;
+            transition: filter 0.3s ease;
+        }
+        .privacy-blur:hover {
+            filter: blur(0);
+        }
+    </style>
+
+    <!-- Import Map for React & Libraries -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom": "https://esm.sh/react-dom@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.300.0",
+        "recharts": "https://esm.sh/recharts@2.10.3?external=react,react-dom"
+      }
+    }
+    </script>
+    
+    <!-- Babel for in-browser compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+        import ReactDOM from 'react-dom/client';
+        import { 
+            Bot, Send, Mic, BrainCircuit, Globe, MapPin, Zap, Loader2, StopCircle,
+            Sparkles, ArrowRight, UserPlus, LogIn, Lock, Mail, User, Eye, EyeOff, KeyRound, CheckCircle2,
+            Activity, Footprints, Heart, Target, Droplets, Flame, Circle, Plus, X,
+            Wind, Timer, Utensils, Moon, Sun, Trophy, Download, Play, Pause, RotateCcw,
+            Settings as SettingsIcon, Ruler, Clock, Save, Trash2, ArrowLeft, Scale, Palette, Bell, SmartphoneNfc, ChevronRight, Check, Crown,
+            Home, Grid, Calendar, Terminal
+        } from 'lucide-react';
+        import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, YAxis, CartesianGrid } from 'recharts';
+
+        // ----------------------------------------------------------------------
+        // TYPES & CONSTANTS
+        // ----------------------------------------------------------------------
+
+        const defaultProfile = {
+            name: 'Guest Athlete',
+            email: '',
+            age: 30,
+            heightCm: 175,
+            weightKg: 70,
+            goal: 'Maintain',
+            stepGoal: 10000,
+            waterGoal: 2.5,
+            calorieGoal: 2500,
+            heartPointsGoal: 30,
+            sleepGoal: 8,
+            gender: 'Male',
+            bmr: 1600,
+            unitSystem: 'metric',
+            xp: 0,
+            level: 1,
+            themeColor: '#00E676',
+            language: 'en',
+            themeMode: 'dark',
+            notifications: true,
+            haptics: true,
+            privacyMode: false,
+            activityLevel: 'moderate',
+            dietaryPreference: 'none',
+            medicalConditions: '',
+            bedTime: '23:00',
+            wakeTime: '07:00',
+            isOnboarded: false
+        };
+
+        const INITIAL_QUESTS = [
+            { id: 'q1', title: 'Hydration Hero', type: 'water', target: 2.0, current: 0, reward: 50, completed: false, icon: 'Droplets' },
+            { id: 'q2', title: 'Step Master', type: 'steps', target: 5000, current: 0, reward: 100, completed: false, icon: 'Footprints' },
+            { id: 'q3', title: 'Fuel Up', type: 'calories', target: 1500, current: 0, reward: 75, completed: false, icon: 'Flame' },
+        ];
+
+        const ACHIEVEMENTS_DEF = [
+            { id: 'a1', title: 'First Steps', description: 'Log your first activity', icon: Footprints, unlocked: false, condition: (s) => s.steps > 0 },
+            { id: 'a2', title: 'Hydro Homie', description: 'Drink 3L of water', icon: Droplets, unlocked: false, condition: (s) => s.waterLiters >= 3 },
+            { id: 'a3', title: 'Calorie Crusher', description: 'Burn 500 active calories', icon: Flame, unlocked: false, condition: (s) => s.caloriesBurned >= 500 },
+            { id: 'a4', title: 'Elite Status', description: 'Reach Level 5', icon: Crown, unlocked: false, condition: (_, lvl) => lvl >= 5 },
+        ];
+
+        const translations = {
+            en: {
+              welcome: "Ready to Ascend?", level: "Level", xp: "XP", steps: "Steps", heartPts: "Heart Pts", activity: "Activity", hydrate: "Hydrate", fuel: "Fuel Up", logActivity: "Log Activity", quests: "Quest Log", daily: "DAILY", journal: "Journal", profile: "Profile", settings: "Settings", general: "General", appearance: "Appearance", notifications: "Feedback & Alerts", privacy: "Privacy & Data", language: "Language", units: "Units", theme: "App Theme", accent: "Accent Color", haptics: "Haptic Feedback", export: "Export Data", reset: "Reset App Data", home: "HOME", hub: "HUB", coach: "AI SYSTEM", weight: "Weight", height: "Height", goal: "Primary Goal", save: "Update Profile", saved: "Saved Successfully", logSleep: "Log Sleep", sleepDuration: "Sleep Duration", quality: "Quality", confirm: "Confirm", cancel: "Cancel", apps: "App Hub", mindfulness: "Mindfulness", workout: "Workout Timer", nutrition: "Nutrition", trophies: "Trophies", systemOnline: "System Online", askAnything: "Query Ascend System...", coaching: "Analyzing...", bmi: "Current BMI", resetConfirm: "Are you sure? This cannot be undone.", light: "Light", dark: "Dark", metric: "Metric", imperial: "Imperial", activityLevel: "Activity Level", diet: "Dietary Preference", medical: "Medical Conditions", sleepGoal: "Sleep Goal (hrs)", waterGoal: "Water Goal (L)", bio: "Bio & Health", preferences: "Preferences", dailyGoals: "Daily Targets", bodyMetrics: "Body Metrics", waist: "Waist", bodyFat: "Body Fat %", sleepSchedule: "Sleep Schedule", bedTime: "Bed Time", wakeTime: "Wake Time"
+            },
+            hi: {
+                welcome: "ऊंचाइयों को छूने के लिए तैयार?", level: "स्तर", xp: "XP", steps: "कदम", heartPts: "हृदय अंक", activity: "गतिविधि", hydrate: "हाइड्रेट", fuel: "भोजन", logActivity: "गतिविधि जोड़ें", quests: "दैनिक लक्ष्य", daily: "दैनिक", journal: "डायरी", profile: "प्रोफ़ाइल", settings: "सेटिंग्स", general: "सामान्य", appearance: "दिखावट", notifications: "सूचनाएं", privacy: "गोपनीयता", language: "भाषा", units: "इकाइयां", theme: "थीम", accent: "रंग", haptics: "कंपन", export: "डेटा निर्यात", reset: "डेटा रीसेट", home: "होम", hub: "हब", coach: "AI साथी", weight: "वजन", height: "कद", goal: "लक्ष्य", save: "सेव करें", saved: "सेव हो गया", logSleep: "नींद जोड़ें", sleepDuration: "नींद की अवधि", quality: "गुणवत्ता", confirm: "पुष्टि करें", cancel: "रद्द करें", apps: "ऐप हब", mindfulness: "ध्यान", workout: "व्यायाम टाइमर", nutrition: "पोषण", trophies: "ट्रॉफी", systemOnline: "सिस्टम ऑनलाइन", askAnything: "कुछ भी पूछें...", coaching: "विश्लेषण...", bmi: "बीएमआई", resetConfirm: "क्या आप सुनिश्चित हैं?", light: "लाइट", dark: "डार्क", metric: "मेट्रिक", imperial: "इम्पीरियल", activityLevel: "गतिविधि स्तर", diet: "आहार", medical: "चिकित्सा स्थिति", sleepGoal: "नींद लक्ष्य", waterGoal: "पानी लक्ष्य", bio: "बायो", preferences: "पसंद", dailyGoals: "दैनिक लक्ष्य", bodyMetrics: "शारीरिक माप", waist: "कमर", bodyFat: "वसा %", sleepSchedule: "नींद का समय", bedTime: "सोने का समय", wakeTime: "जागने का समय"
+            },
+            es: {
+                welcome: "¿Listo para Ascender?", level: "Nivel", xp: "XP", steps: "Pasos", heartPts: "Ptos Corazón", activity: "Actividad", hydrate: "Hidratar", fuel: "Combustible", logActivity: "Reg. Actividad", quests: "Misiones", daily: "DIARIO", journal: "Diario", profile: "Perfil", settings: "Ajustes", general: "General", appearance: "Apariencia", notifications: "Notificaciones", privacy: "Privacidad", language: "Idioma", units: "Unidades", theme: "Tema", accent: "Color Acento", haptics: "Háptico", export: "Exportar", reset: "Reiniciar", home: "INICIO", hub: "CENTRO", coach: "SISTEMA IA", weight: "Peso", height: "Altura", goal: "Meta", save: "Guardar", saved: "Guardado", logSleep: "Reg. Sueño", sleepDuration: "Duración", quality: "Calidad", confirm: "Confirmar", cancel: "Cancelar", apps: "Centro Apps", mindfulness: "Atención", workout: "Temporizador", nutrition: "Nutrición", trophies: "Trofeos", systemOnline: "Sistema En Línea", askAnything: "Consultar Sistema...", coaching: "Analizando...", bmi: "IMC Actual", resetConfirm: "¿Estás seguro?", light: "Claro", dark: "Oscuro", metric: "Métrico", imperial: "Imperial", activityLevel: "Nivel Actividad", diet: "Dieta", medical: "Condiciones", sleepGoal: "Meta Sueño", waterGoal: "Meta Agua", bio: "Bio y Salud", preferences: "Preferencias", dailyGoals: "Metas Diarias", bodyMetrics: "Métricas", waist: "Cintura", bodyFat: "Grasa %", sleepSchedule: "Horario Sueño", bedTime: "Hora Dormir", wakeTime: "Hora Despertar"
+            },
+            fr: {
+                welcome: "Prêt à l'Ascension?", level: "Niveau", xp: "XP", steps: "Pas", heartPts: "Pts Cœur", activity: "Activité", hydrate: "Hydrater", fuel: "Carburant", logActivity: "Ajouter Activité", quests: "Quêtes", daily: "QUOTIDIEN", journal: "Journal", profile: "Profil", settings: "Paramètres", general: "Général", appearance: "Apparence", notifications: "Notifications", privacy: "Privé", language: "Langue", units: "Unités", theme: "Thème", accent: "Couleur", haptics: "Haptique", export: "Exporter", reset: "Réinitialiser", home: "ACCUEIL", hub: "HUB", coach: "SYSTÈME IA", weight: "Poids", height: "Taille", goal: "Objectif", save: "Mettre à jour", saved: "Sauvegardé", logSleep: "Ajouter Sommeil", sleepDuration: "Durée", quality: "Qualité", confirm: "Confirmer", cancel: "Annuler", apps: "Hub Apps", mindfulness: "Pleine Conscience", workout: "Minuteur", nutrition: "Nutrition", trophies: "Trophées", systemOnline: "Système En Ligne", askAnything: "Demander au système...", coaching: "Analyse...", bmi: "IMC Actuel", resetConfirm: "Êtes-vous sûr?", light: "Clair", dark: "Sombre", metric: "Métrique", imperial: "Impérial", activityLevel: "Niveau Activité", diet: "Régime", medical: "Conditions", sleepGoal: "Obj. Sommeil", waterGoal: "Obj. Eau", bio: "Bio & Santé", preferences: "Préférences", dailyGoals: "Obj. Quotidiens", bodyMetrics: "Mesures", waist: "Taille", bodyFat: "Graisse %", sleepSchedule: "Horaire", bedTime: "Coucher", wakeTime: "Lever"
+            },
+            de: {
+                welcome: "Bereit zum Aufstieg?", level: "Level", xp: "XP", steps: "Schritte", heartPts: "Herz Pkt", activity: "Aktivität", hydrate: "Trinken", fuel: "Essen", logActivity: "Aktivität", quests: "Quests", daily: "TÄGLICH", journal: "Journal", profile: "Profil", settings: "Einstellungen", general: "Allgemein", appearance: "Aussehen", notifications: "Meldungen", privacy: "Privatsphäre", language: "Sprache", units: "Einheiten", theme: "Thema", accent: "Akzent", haptics: "Haptik", export: "Exportieren", reset: "Zurücksetzen", home: "START", hub: "HUB", coach: "KI SYSTEM", weight: "Gewicht", height: "Größe", goal: "Ziel", save: "Speichern", saved: "Gespeichert", logSleep: "Schlaf", sleepDuration: "Dauer", quality: "Qualität", confirm: "Bestätigen", cancel: "Abbrechen", apps: "App Hub", mindfulness: "Achtsamkeit", workout: "Timer", nutrition: "Ernährung", trophies: "Trophäen", systemOnline: "System Online", askAnything: "System fragen...", coaching: "Analysiere...", bmi: "Aktueller BMI", resetConfirm: "Sind Sie sicher?", light: "Hell", dark: "Dunkel", metric: "Metrisch", imperial: "Imperial", activityLevel: "Aktivitätslevel", diet: "Diät", medical: "Bedingungen", sleepGoal: "Schlafziel", waterGoal: "Wasserziel", bio: "Bio & Gesundheit", preferences: "Präferenzen", dailyGoals: "Tagesziele", bodyMetrics: "Körpermaße", waist: "Taille", bodyFat: "Körperfett %", sleepSchedule: "Schlafplan", bedTime: "Schlafen", wakeTime: "Aufwachen"
+            },
+            ja: {
+                welcome: "アセンション準備完了？", level: "レベル", xp: "XP", steps: "歩数", heartPts: "ハートPt", activity: "アクティビティ", hydrate: "水分", fuel: "食事", logActivity: "記録する", quests: "クエスト", daily: "毎日", journal: "日誌", profile: "プロフィール", settings: "設定", general: "一般", appearance: "外観", notifications: "通知", privacy: "プライバシー", language: "言語", units: "単位", theme: "テーマ", accent: "アクセント色", haptics: "触覚", export: "出力", reset: "リセット", home: "ホーム", hub: "ハブ", coach: "AIシステム", weight: "体重", height: "身長", goal: "目標", save: "保存", saved: "保存完了", logSleep: "睡眠記録", sleepDuration: "睡眠時間", quality: "質", confirm: "確認", cancel: "キャンセル", apps: "アプリ", mindfulness: "マインドフルネス", workout: "タイマー", nutrition: "栄養", trophies: "トロフィー", systemOnline: "システムオンライン", askAnything: "システムに質問...", coaching: "分析中...", bmi: "BMI", resetConfirm: "本当に実行しますか？", light: "ライト", dark: "ダーク", metric: "メートル法", imperial: "ヤード・ポンド法", activityLevel: "活動レベル", diet: "食事制限", medical: "病歴", sleepGoal: "睡眠目標", waterGoal: "水分目標", bio: "バイオ＆健康", preferences: "設定", dailyGoals: "デイリー目標", bodyMetrics: "身体測定", waist: "ウエスト", bodyFat: "体脂肪率", sleepSchedule: "睡眠スケジュール", bedTime: "就寝", wakeTime: "起床"
+            }
+        };
+
+        // ----------------------------------------------------------------------
+        // CONTEXT
+        // ----------------------------------------------------------------------
+
+        const TrackerContext = createContext(undefined);
+
+        const TrackerProvider = ({ children, user, onLogout }) => {
+            const getKey = (key) => `ascend_${user.email}_${key}`;
+
+            const [profile, setProfile] = useState(defaultProfile);
+            const [logs, setLogs] = useState([]);
+            const [quests, setQuests] = useState(INITIAL_QUESTS);
+            const [achievements, setAchievements] = useState(ACHIEVEMENTS_DEF);
+            
+            const [dailyStats, setDailyStats] = useState({
+                steps: 0, heartPoints: 0, waterLiters: 0, caloriesConsumed: 0, caloriesBurned: 0, moveMinutes: 0,
+                macros: { protein: 0, carbs: 0, fat: 0 }
+            });
+
+            // --- THEME & COLOR EFFECT ---
+            useEffect(() => {
+                const root = document.documentElement;
+                
+                // 1. Theme Mode
+                if (profile.themeMode === 'light') {
+                    root.classList.add('light-theme');
+                    // In light mode, glass panels need to be lighter
+                    // The CSS variable override in <style> handles --bg, --card, --text etc.
+                } else {
+                    root.classList.remove('light-theme');
+                }
+                
+                // 2. Accent Color
+                if (profile.themeColor) {
+                    root.style.setProperty('--accent', profile.themeColor);
+                    
+                    // Generate glow (simple opacity version of hex)
+                    const hex = profile.themeColor.replace('#', '');
+                    const r = parseInt(hex.substring(0,2), 16);
+                    const g = parseInt(hex.substring(2,4), 16);
+                    const b = parseInt(hex.substring(4,6), 16);
+                    
+                    if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
+                        root.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
+                    }
+                }
+            }, [profile.themeMode, profile.themeColor]);
+
+            const t = useCallback((key) => {
+                const lang = translations[profile.language] || translations['en'];
+                return lang[key] || translations['en'][key] || key;
+            }, [profile.language]);
+
+            // ... (Existing Logic: useEffect for loading/saving data)
+            useEffect(() => {
+                const savedProfile = localStorage.getItem(getKey('profile'));
+                const savedLogs = localStorage.getItem(getKey('logs'));
+                const savedQuests = localStorage.getItem(getKey('quests'));
+                const savedAchievements = localStorage.getItem(getKey('achievements'));
+                
+                if (savedProfile) {
+                    setProfile({ ...defaultProfile, ...JSON.parse(savedProfile) });
+                } else {
+                    setProfile({ ...defaultProfile, name: user.name, email: user.email });
+                }
+
+                if (savedLogs) setLogs(JSON.parse(savedLogs));
+                
+                if (savedQuests) {
+                    const lastQuestDate = localStorage.getItem(getKey('quest_date'));
+                    const today = new Date().toDateString();
+                    if (lastQuestDate !== today) {
+                        setQuests(INITIAL_QUESTS);
+                        localStorage.setItem(getKey('quest_date'), today);
+                    } else {
+                        setQuests(JSON.parse(savedQuests));
+                    }
+                }
+                
+                if (savedAchievements) {
+                    const parsed = JSON.parse(savedAchievements);
+                    const merged = ACHIEVEMENTS_DEF.map(def => {
+                        const saved = parsed.find(p => p.id === def.id);
+                        return { ...def, unlocked: saved ? saved.unlocked : false };
+                    });
+                    setAchievements(merged);
+                }
+            }, [user.email]);
+
+            useEffect(() => {
+                const today = new Date().setHours(0, 0, 0, 0);
+                const todayLogs = logs.filter(l => l.timestamp >= today);
+
+                const stats = {
+                    steps: 0, heartPoints: 0, waterLiters: 0, caloriesConsumed: 0, caloriesBurned: 0, moveMinutes: 0,
+                    macros: { protein: 0, carbs: 0, fat: 0 }
+                };
+
+                todayLogs.forEach(log => {
+                    if (log.type === 'StepWalk') {
+                        stats.steps += Number(log.value);
+                        stats.moveMinutes += log.meta?.duration || 0;
+                        stats.heartPoints += log.meta?.heartPoints || 0;
+                    }
+                    if (log.type === 'Water') stats.waterLiters += Number(log.value);
+                    if (log.type === 'Meal') {
+                        stats.caloriesConsumed += Number(log.value);
+                        if (log.meta?.macros) {
+                            stats.macros.protein += log.meta.macros.protein;
+                            stats.macros.carbs += log.meta.macros.carbs;
+                            stats.macros.fat += log.meta.macros.fat;
+                        }
+                    }
+                    if (log.meta?.calories) stats.caloriesBurned += log.meta.calories;
+                });
+
+                setDailyStats(stats);
+
+                const updatedQuests = quests.map(q => {
+                    let val = 0;
+                    if (q.type === 'water') val = stats.waterLiters;
+                    if (q.type === 'steps') val = stats.steps;
+                    if (q.type === 'calories') val = stats.caloriesConsumed;
+                    
+                    if (val >= q.target && !q.completed) {
+                        awardXP(q.reward);
+                        return { ...q, current: val, completed: true };
+                    }
+                    return { ...q, current: val };
+                });
+                
+                if (JSON.stringify(updatedQuests) !== JSON.stringify(quests)) {
+                    setQuests(updatedQuests);
+                    localStorage.setItem(getKey('quests'), JSON.stringify(updatedQuests));
+                }
+
+                const updatedAchievements = ACHIEVEMENTS_DEF.map(def => {
+                    const isUnlocked = achievements.find(a => a.id === def.id)?.unlocked || def.condition(stats, profile.level);
+                    return { ...def, unlocked: isUnlocked };
+                });
+                
+                const currentUnlocked = achievements.map(a => a.unlocked).join(',');
+                const newUnlocked = updatedAchievements.map(a => a.unlocked).join(',');
+
+                if(currentUnlocked !== newUnlocked) {
+                    setAchievements(updatedAchievements);
+                    localStorage.setItem(getKey('achievements'), JSON.stringify(updatedAchievements));
+                }
+                
+                localStorage.setItem(getKey('logs'), JSON.stringify(logs));
+            }, [logs, user.email]);
+
+            const awardXP = (amount) => {
+                setProfile(prev => {
+                    let newXP = prev.xp + amount;
+                    let newLevel = prev.level;
+                    const xpToNext = newLevel * 100;
+                    
+                    if (newXP >= xpToNext) {
+                        newXP -= xpToNext;
+                        newLevel++;
+                        if (navigator.vibrate && prev.haptics) navigator.vibrate([100, 50, 100]);
+                    }
+                    
+                    const updated = { ...prev, xp: newXP, level: newLevel };
+                    localStorage.setItem(getKey('profile'), JSON.stringify(updated));
+                    return updated;
+                });
+            };
+
+            const addLog = useCallback((data) => {
+                const newLog = { ...data, id: crypto.randomUUID(), timestamp: Date.now() };
+                setLogs(prev => [newLog, ...prev]);
+                awardXP(10);
+                if (navigator.vibrate && profile.haptics) navigator.vibrate(50);
+            }, [profile.haptics]);
+
+            const updateProfile = useCallback((data) => {
+                setProfile(prev => {
+                    const updated = { ...prev, ...data };
+                    localStorage.setItem(getKey('profile'), JSON.stringify(updated));
+                    return updated;
+                });
+            }, [user.email]);
+
+            const resetData = useCallback(() => {
+                localStorage.removeItem(getKey('profile'));
+                localStorage.removeItem(getKey('logs'));
+                localStorage.removeItem(getKey('quests'));
+                localStorage.removeItem(getKey('achievements'));
+                localStorage.removeItem(getKey('quest_date'));
+                onLogout();
+            }, [user.email, onLogout]);
+
+            return (
+                <TrackerContext.Provider value={{ profile, logs, dailyStats, quests, achievements, addLog, updateProfile, resetData, t }}>
+                    {children}
+                </TrackerContext.Provider>
+            );
+        };
+
+        const useTracker = () => {
+            const context = useContext(TrackerContext);
+            if (!context) throw new Error('useTracker must be used within TrackerProvider');
+            return context;
+        };
+
+        // ----------------------------------------------------------------------
+        // COMPONENTS
+        // ----------------------------------------------------------------------
+
+        // --- Offline AI System Guide ---
+        const SystemGuide = () => {
+            const { profile, dailyStats, t } = useTracker();
+            const [messages, setMessages] = useState([
+                { id: '1', role: 'model', text: `SYSTEM INITIALIZED.\nWelcome, ${profile.name}. I am your offline bio-analytic guide. Accessing local health database...`, timestamp: Date.now() }
+            ]);
+            const [input, setInput] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const scrollRef = useRef(null);
+
+            useEffect(() => {
+                if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            }, [messages, isLoading]);
+
+            const generateOfflineResponse = (text) => {
+                const lowerText = text.toLowerCase();
+                let response = "I didn't quite catch that. Try keywords like 'status', 'water', 'diet', or 'advice'.";
+
+                if (lowerText.includes('status') || lowerText.includes('stats')) {
+                    response = `CURRENT STATUS REPORT:\n• Steps: ${dailyStats.steps} / ${profile.stepGoal}\n• Water: ${dailyStats.waterLiters}L / ${profile.waterGoal}L\n• Calories: ${dailyStats.caloriesConsumed} / ${profile.calorieGoal} kcal\n\nSystem advises: ${dailyStats.steps < profile.stepGoal ? "Increase mobility." : "Activity levels nominal."}`;
+                } else if (lowerText.includes('water') || lowerText.includes('hydrate')) {
+                    const remaining = Math.max(0, profile.waterGoal - dailyStats.waterLiters).toFixed(1);
+                    response = remaining > 0 ? `Hydration levels suboptimal. Intake required: ${remaining}L.` : `Hydration levels optimal. Maintain current intake.`;
+                } else if (lowerText.includes('diet') || lowerText.includes('food') || lowerText.includes('eat')) {
+                    response = `Dietary Protocol: ${profile.goal}. \nCaloric Intake: ${dailyStats.caloriesConsumed} kcal.\nRecommendation: Prioritize protein and whole foods. Avoid processed sugars to maintain system efficiency.`;
+                } else if (lowerText.includes('sleep') || lowerText.includes('tired')) {
+                    response = `Recovery Protocol: Target ${profile.sleepGoal} hours of sleep. \nScheduled Bedtime: ${profile.bedTime}.\nEnsure reduced light exposure 1 hour prior to sleep.`;
+                } else if (lowerText.includes('hello') || lowerText.includes('hi')) {
+                    response = `Greetings, ${profile.name}. All systems operational. How may I assist your evolution today?`;
+                } else if (lowerText.includes('advice') || lowerText.includes('tip')) {
+                    const tips = [
+                        "Consistency is the key algorithm for biological success.",
+                        "Incremental progress yields exponential results over time.",
+                        "Hydration improves cognitive and physical performance metrics.",
+                        "Rest is not a bug; it is a critical system update."
+                    ];
+                    response = tips[Math.floor(Math.random() * tips.length)];
+                }
+
+                return response;
+            };
+
+            const handleSend = async () => {
+                if (!input.trim() || isLoading) return;
+
+                const userMsg = { 
+                    id: Date.now().toString(), 
+                    role: 'user', 
+                    text: input, 
+                    timestamp: Date.now(),
+                };
+                setMessages(prev => [...prev, userMsg]);
+                setInput('');
+                setIsLoading(true);
+
+                // Simulate processing delay
+                setTimeout(() => {
+                    const responseText = generateOfflineResponse(userMsg.text);
+                    const aiMsg = { 
+                        id: (Date.now() + 1).toString(), 
+                        role: 'model', 
+                        text: responseText, 
+                        timestamp: Date.now() 
+                    };
+                    setMessages(prev => [...prev, aiMsg]);
+                    setIsLoading(false);
+                }, 800);
+            };
+
+            return (
+                <div className="flex flex-col h-[calc(100vh-140px)] w-full max-w-4xl mx-auto animate-in fade-in duration-500 text-text">
+                    <div className="bg-card backdrop-blur-xl p-3 rounded-2xl border border-border mb-4 flex items-center justify-between shadow-2xl">
+                        <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-accent animate-pulse"></div>
+                            <span className="text-xs font-mono tracking-widest text-accent">SYSTEM_ONLINE // V 4.5.0</span>
+                        </div>
+                        <div className="flex items-center gap-2 pr-2">
+                             <Terminal size={14} className="text-subtext" />
+                             <span className="text-[10px] font-bold text-subtext uppercase">Local Core</span>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-6 pr-2 pb-4 scroll-smooth" ref={scrollRef}>
+                        {messages.map((msg) => (
+                        <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} pop-in`} style={{animationDelay: '100ms'}}>
+                            
+                            <div className={`flex items-end gap-3 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                                {msg.role === 'model' && (
+                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20 mb-1 border border-white/10">
+                                        <Bot size={16} />
+                                    </div>
+                                )}
+                                
+                                <div className={`p-4 rounded-2xl shadow-lg relative overflow-hidden backdrop-blur-md ${
+                                msg.role === 'user' 
+                                    ? 'bg-primary text-white rounded-br-none border border-primary/50' 
+                                    : 'bg-card text-text rounded-bl-none border border-border'
+                                }`}>
+                                <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">{msg.text}</p>
+                                </div>
+                            </div>
+                        </div>
+                        ))}
+                        {isLoading && (
+                            <div className="flex items-center gap-3 ml-2 text-subtext text-xs animate-pulse">
+                                <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
+                                    <Loader2 size={14} className="animate-spin text-accent" />
+                                </div>
+                                <span className="font-mono tracking-widest">PROCESSING_DATA...</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="mt-4 relative bg-card backdrop-blur-2xl rounded-[1.5rem] border border-border p-2 shadow-2xl flex items-center gap-2 transition-all focus-within:border-accent/50 focus-within:ring-1 focus-within:ring-accent/20">
+                        <input
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                            placeholder={t('askAnything')}
+                            className="flex-1 bg-transparent text-text placeholder-subtext outline-none text-sm px-4 py-3 font-medium"
+                        />
+                        
+                        <button 
+                            onClick={handleSend}
+                            disabled={isLoading}
+                            className="p-3 bg-accent hover:bg-accent/90 hover:scale-105 rounded-xl text-black transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 shadow-[0_0_15px_var(--accent-glow)]"
+                        >
+                            <Send size={18} fill="currentColor" className="mr-0.5" />
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- AuthScreen ---
+        const AuthScreen = ({ onLogin }) => {
+            const [view, setView] = useState('login');
+            const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+            const [showPassword, setShowPassword] = useState(false);
+            const [error, setError] = useState('');
+            const [resetSent, setResetSent] = useState(false);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setError('');
+
+                if (view === 'forgot-password') {
+                    if (!formData.email) { setError("Please enter your email"); return; }
+                    setResetSent(true);
+                    setTimeout(() => { setResetSent(false); setView('login'); }, 3000);
+                    return;
+                }
+
+                if (!formData.email || !formData.password || (view === 'signup' && !formData.name)) {
+                    setError("Please fill in all fields");
+                    return;
+                }
+
+                const usersStore = localStorage.getItem('ascend_users');
+                const users = usersStore ? JSON.parse(usersStore) : {};
+
+                if (view === 'login') {
+                    const user = users[formData.email];
+                    if (user && user.password === formData.password) {
+                        onLogin({ name: user.name, email: user.email });
+                    } else {
+                        setError("Invalid email or password");
+                    }
+                } else {
+                    if (users[formData.email]) { setError("User already exists"); return; }
+                    const newUser = { name: formData.name, email: formData.email, password: formData.password };
+                    users[formData.email] = newUser;
+                    localStorage.setItem('ascend_users', JSON.stringify(users));
+                    onLogin({ name: newUser.name, email: newUser.email });
+                }
+            };
+
+            const toggleView = () => {
+                setView(prev => prev === 'login' ? 'signup' : 'login');
+                setError('');
+                setResetSent(false);
+            };
+
+            return (
+                <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-background">
+                    <div className="bg-mesh"></div>
+                    
+                    <div className="w-full max-w-md relative z-10 animate-[fadeIn_0.8s_cubic-bezier(0.16,1,0.3,1)]">
+                        <div className="text-center mb-8">
+                            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#00E676] to-[#536DFE] shadow-[0_0_40px_rgba(0,230,118,0.3)] mb-6 animate-float">
+                                <Sparkles size={40} className="text-white animate-pulse" />
+                            </div>
+                            <h1 className="text-5xl font-black text-text tracking-wider font-display mb-2 drop-shadow-lg">
+                                ASCEND<span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00E676] to-[#536DFE]">.OS</span>
+                            </h1>
+                            <p className="text-subtext font-medium tracking-wide text-sm uppercase">Evolution Protocol v4.5</p>
+                        </div>
+
+                        <div className="glass-panel-heavy p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00E676] via-[#536DFE] to-[#00E676] bg-[length:200%_100%] animate-[pulse_4s_linear_infinite]"></div>
+                            
+                            <h2 className="text-2xl font-bold text-text mb-8 flex items-center gap-3">
+                                {view === 'login' && <LogIn size={24} className="text-[#00E676]" />}
+                                {view === 'signup' && <UserPlus size={24} className="text-[#536DFE]" />}
+                                {view === 'forgot-password' && <KeyRound size={24} className="text-yellow-400" />}
+                                
+                                {view === 'login' ? 'System Access' : view === 'signup' ? 'New Profile Init' : 'Reset Protocol'}
+                            </h2>
+
+                            {resetSent ? (
+                                <div className="text-center py-8 animate-in zoom-in duration-300">
+                                    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 mx-auto mb-4 border border-green-500/30 shadow-[0_0_20px_rgba(0,230,118,0.2)]">
+                                        <CheckCircle2 size={32} />
+                                    </div>
+                                    <h3 className="text-text font-bold text-lg mb-2">Instructions Sent</h3>
+                                    <p className="text-subtext text-sm">Check your secure inbox for reset link.</p>
+                                </div>
+                            ) : (
+                                <form onSubmit={handleSubmit} className="space-y-5">
+                                    {view === 'signup' && (
+                                        <div className="space-y-1 animate-in slide-in-from-left-4 duration-300">
+                                            <label className="text-[10px] font-bold text-subtext uppercase tracking-widest ml-1">Codename</label>
+                                            <div className="relative group">
+                                                <User className="absolute left-4 top-3.5 text-gray-500 group-focus-within:text-text transition-colors" size={18} />
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Enter your name"
+                                                    value={formData.name}
+                                                    onChange={e => setFormData({...formData, name: e.target.value})}
+                                                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-text placeholder-gray-600 focus:border-[#536DFE] focus:ring-1 focus:ring-[#536DFE] outline-none transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-subtext uppercase tracking-widest ml-1">Identity</label>
+                                        <div className="relative group">
+                                            <Mail className="absolute left-4 top-3.5 text-gray-500 group-focus-within:text-text transition-colors" size={18} />
+                                            <input 
+                                                type="email" 
+                                                placeholder="email@domain.com"
+                                                value={formData.email}
+                                                onChange={e => setFormData({...formData, email: e.target.value})}
+                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-text placeholder-gray-600 focus:border-[#536DFE] focus:ring-1 focus:ring-[#536DFE] outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {view !== 'forgot-password' && (
+                                        <div className="space-y-1 animate-in slide-in-from-right-4 duration-300">
+                                            <label className="text-[10px] font-bold text-subtext uppercase tracking-widest ml-1">Passkey</label>
+                                            <div className="relative group">
+                                                <Lock className="absolute left-4 top-3.5 text-gray-500 group-focus-within:text-text transition-colors" size={18} />
+                                                <input 
+                                                    type={showPassword ? "text" : "password"}
+                                                    placeholder="••••••••"
+                                                    value={formData.password}
+                                                    onChange={e => setFormData({...formData, password: e.target.value})}
+                                                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-12 text-text placeholder-gray-600 focus:border-[#536DFE] focus:ring-1 focus:ring-[#536DFE] outline-none transition-all"
+                                                />
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-4 top-3.5 text-gray-500 hover:text-text transition-colors"
+                                                >
+                                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
+                                            </div>
+                                            {view === 'login' && (
+                                                <div className="flex justify-end mt-1">
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => { setView('forgot-password'); setError(''); }}
+                                                        className="text-[10px] text-subtext hover:text-text transition-colors font-bold uppercase tracking-wide"
+                                                    >
+                                                        Forgot Password?
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {error && (
+                                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs font-bold flex items-center gap-2 animate-in slide-in-from-top-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                                            {error}
+                                        </div>
+                                    )}
+
+                                    <button 
+                                        type="submit" 
+                                        className="w-full bg-white text-black font-black py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] mt-6 flex items-center justify-center gap-2 group"
+                                    >
+                                        {view === 'login' ? 'AUTHENTICATE' : view === 'signup' ? 'INITIALIZE' : 'SEND LINK'}
+                                        <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                </form>
+                            )}
+
+                            <div className="mt-8 text-center pt-6 border-t border-white/5">
+                                {view === 'forgot-password' ? (
+                                     <button 
+                                        onClick={() => { setView('login'); setError(''); }}
+                                        className="text-subtext text-sm font-bold hover:text-text transition-colors"
+                                    >
+                                        <ArrowLeft size={14} className="inline mr-1" /> Return
+                                    </button>
+                                ) : (
+                                    <p className="text-subtext text-sm">
+                                        {view === 'login' ? "First time user?" : "Already initialized?"}
+                                        <button 
+                                            onClick={toggleView}
+                                            className="ml-2 text-text font-bold hover:text-[#00E676] transition-colors underline decoration-dotted underline-offset-4"
+                                        >
+                                            {view === 'login' ? 'Create Profile' : 'Login'}
+                                        </button>
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        
+                        <p className="text-center text-[10px] text-gray-600 mt-8 font-mono">SECURE OFFLINE ENVIRONMENT • V4.5</p>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Dashboard ---
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="glass-panel-heavy w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-white/10">
+                        <div className="p-5 border-b border-white/5 flex justify-between items-center bg-white/5">
+                            <h3 className="font-black text-text uppercase tracking-widest text-sm flex items-center gap-2">
+                                <span className="w-1.5 h-4 bg-accent rounded-full"></span>
+                                {title}
+                            </h3>
+                            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-subtext hover:text-text"><X size={20} /></button>
+                        </div>
+                        <div className="p-6">{children}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Dashboard = () => {
+            const { profile, dailyStats, addLog, quests, t } = useTracker();
+            const [activeModal, setActiveModal] = useState(null);
+            const [mounted, setMounted] = useState(false);
+
+            useEffect(() => { setMounted(true); }, []);
+
+            const calculateOffset = (current, max) => {
+                const circumference = 2 * Math.PI * 45;
+                const percent = Math.min(100, (current / Math.max(1, max)) * 100);
+                return circumference - (circumference * percent) / 100;
+            };
+
+            const hpOffset = calculateOffset(dailyStats.heartPoints, profile.heartPointsGoal);
+            const xpProgress = (profile.xp / (profile.level * 100)) * 100;
+
+            const handleWalkSubmit = (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const mins = parseInt(formData.get('duration'));
+                addLog({
+                    type: 'StepWalk',
+                    value: Math.floor(mins * 90),
+                    meta: { duration: mins, heartPoints: Math.floor(mins / 5), calories: mins * 4 }
+                });
+                setActiveModal(null);
+            };
+
+            const handleMealSubmit = (e) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                const cals = parseInt(fd.get('cals'));
+                const p = parseInt(fd.get('prot')) || 0;
+                const c = parseInt(fd.get('carb')) || 0;
+                const f = parseInt(fd.get('fat')) || 0;
+                
+                addLog({ type: 'Meal', value: cals, meta: { macros: { protein: p, carbs: c, fat: f } } });
+                setActiveModal(null);
+            };
+
+            return (
+                <div className="space-y-8 w-full max-w-6xl mx-auto text-text transition-colors duration-500 pb-24">
+                    <div className="flex justify-between items-end slide-up-fade stagger-1 border-b border-border pb-6">
+                        <div>
+                        <h2 className="text-4xl md:text-5xl font-black tracking-tight font-display text-transparent bg-clip-text bg-gradient-to-r from-text to-subtext">
+                            {t('welcome')}
+                        </h2>
+                        <p className="text-xs text-subtext font-bold uppercase tracking-[0.2em] mt-3 flex items-center gap-2">
+                            <span className="w-2 h-2 bg-accent rounded-full shadow-[0_0_10px_var(--accent)]"></span>
+                            {new Date().toLocaleDateString(profile.language || 'en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                        </p>
+                        </div>
+                        <div className="text-right hidden sm:block">
+                            <div className="flex items-center gap-3 justify-end mb-2">
+                                <div className="px-3 py-1 bg-accent/10 rounded-lg border border-accent/20 shadow-[0_0_15px_var(--accent-glow)]">
+                                    <span className="text-xs font-black text-accent uppercase tracking-wider">{t('level')} {profile.level}</span>
+                                </div>
+                                <span className="text-xs font-mono text-subtext font-bold">{Math.floor(profile.xp)} / {profile.level * 100} XP</span>
+                            </div>
+                            <div className="w-48 h-3 bg-gray-800/50 rounded-full overflow-hidden border border-border relative">
+                                <div className="absolute inset-0 bg-gradient-to-r from-accent to-[#536DFE] transition-all duration-1000 ease-out" style={{width: `${xpProgress}%`}}>
+                                    <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <div className="lg:col-span-7 slide-up-fade stagger-2">
+                            <div className="h-full glass-panel rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden group border-white/5 transition-all duration-500 hover:border-accent/20">
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent/10 blur-[100px] rounded-full pointer-events-none group-hover:bg-accent/20 transition-all duration-700"></div>
+
+                                <div className="flex flex-col md:flex-row items-center justify-between gap-10 relative z-10">
+                                    <div className="relative w-64 h-64 md:w-72 md:h-72 transition-transform duration-700 group-hover:scale-105">
+                                        <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_30px_var(--accent-glow)]">
+                                            <circle cx="50%" cy="50%" r="45%" fill="none" stroke="var(--card)" strokeWidth="12" strokeLinecap="round" />
+                                            <circle cx="50%" cy="50%" r="32%" fill="none" stroke="var(--card)" strokeWidth="12" strokeLinecap="round" />
+                                            
+                                            <circle
+                                                cx="50%" cy="50%" r="45%" fill="none" stroke="#536DFE" strokeWidth="12" strokeLinecap="round"
+                                                style={{ strokeDasharray: 283, strokeDashoffset: mounted ? hpOffset : 283, transition: 'stroke-dashoffset 2s cubic-bezier(0.2, 0.8, 0.2, 1)' }}
+                                                className="opacity-90"
+                                            />
+                                            <circle
+                                                cx="50%" cy="50%" r="32%" fill="none" stroke="var(--accent)" strokeWidth="12" strokeLinecap="round"
+                                                style={{ strokeDasharray: 200, strokeDashoffset: mounted ? calculateOffset(dailyStats.steps, profile.stepGoal) * (200/283) : 200, transition: 'stroke-dashoffset 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s' }}
+                                                className="opacity-90"
+                                            />
+                                        </svg>
+                                        
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-text">
+                                            <Activity size={32} className="text-accent mb-2 animate-[pulse_3s_infinite]" />
+                                            <span className={`text-6xl font-black tracking-tighter tabular-nums drop-shadow-2xl ${profile.privacyMode ? 'privacy-blur' : ''}`}>{dailyStats.heartPoints}</span>
+                                            <span className="text-[10px] text-subtext font-bold uppercase tracking-[0.2em]">{t('heartPts')}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-1 space-y-8 w-full">
+                                        <div className="space-y-4">
+                                            <div>
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="text-[#536DFE] font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                                                        <Heart size={14} /> {t('activity')}
+                                                    </span>
+                                                    <span className={`text-text font-mono font-bold ${profile.privacyMode ? 'privacy-blur' : ''}`}>{Math.round((dailyStats.heartPoints / profile.heartPointsGoal) * 100)}%</span>
+                                                </div>
+                                                <div className="h-2 w-full bg-gray-800/50 rounded-full overflow-hidden backdrop-blur-sm">
+                                                    <div className="h-full bg-[#536DFE] w-0 transition-all duration-1000 delay-300 shadow-[0_0_10px_#536DFE]" style={{width: mounted ? `${Math.min(100, (dailyStats.heartPoints / profile.heartPointsGoal) * 100)}%` : '0%'}}></div>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="text-accent font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                                                        <Footprints size={14} /> {t('steps')}
+                                                    </span>
+                                                    <span className={`text-text font-mono font-bold ${profile.privacyMode ? 'privacy-blur' : ''}`}>{dailyStats.steps.toLocaleString()} / {profile.stepGoal/1000}k</span>
+                                                </div>
+                                                <div className="h-2 w-full bg-gray-800/50 rounded-full overflow-hidden backdrop-blur-sm">
+                                                    <div className="h-full bg-accent w-0 transition-all duration-1000 delay-500 shadow-[0_0_10px_var(--accent)]" style={{width: mounted ? `${Math.min(100, (dailyStats.steps / profile.stepGoal) * 100)}%` : '0%'}}></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button 
+                                            onClick={() => setActiveModal('StepWalk')}
+                                            className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-accent/50 text-text font-bold py-4 rounded-xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 group/btn backdrop-blur-md"
+                                        >
+                                            <span className="bg-accent text-black rounded-lg p-1 group-hover/btn:rotate-12 transition-transform shadow-lg"><Plus size={16} /></span>
+                                            <span className="tracking-wide">{t('logActivity')}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-5 space-y-6">
+                            <div className="glass-panel rounded-[2rem] p-6 slide-up-fade stagger-3 hover-lift border-t border-white/10">
+                                <div className="flex justify-between items-center mb-5">
+                                        <h3 className="text-xs font-black text-subtext uppercase tracking-widest flex items-center gap-2">
+                                            <Target size={16} className="text-[#536DFE]" /> {t('quests')}
+                                        </h3>
+                                        <span className="text-[10px] bg-[#536DFE]/10 text-[#536DFE] border border-[#536DFE]/20 px-2 py-1 rounded-md font-bold shadow-[0_0_10px_rgba(83,109,254,0.1)]">{t('daily')}</span>
+                                </div>
+                                <div className="space-y-3">
+                                    {quests.map((q) => (
+                                        <div key={q.id} className="flex items-center justify-between p-3 bg-black/5 rounded-xl border border-white/5 hover:bg-black/10 transition-colors group">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`transition-all duration-500 ${q.completed ? 'text-accent scale-110 drop-shadow-[0_0_5px_var(--accent)]' : 'text-subtext group-hover:text-gray-400'}`}>
+                                                    {q.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+                                                </div>
+                                                <div className="w-full">
+                                                    <div className="flex justify-between w-full">
+                                                        <p className={`text-sm font-bold transition-all ${q.completed ? 'text-subtext line-through' : 'text-text'}`}>{q.title}</p>
+                                                        <p className="text-[10px] text-subtext font-mono tracking-wider">+{q.reward}XP</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 mt-2 w-full">
+                                                            <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden">
+                                                                <div className="h-full bg-gradient-to-r from-accent to-emerald-400" style={{width: `${Math.min(100, (q.current/q.target)*100)}%`}}></div>
+                                                            </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 slide-up-fade stagger-4">
+                                <button 
+                                    onClick={() => addLog({ type: 'Water', value: 0.25 })}
+                                    className="glass-panel p-5 rounded-[1.5rem] hover:border-blue-400/50 transition-all hover:scale-[1.02] active:scale-95 group relative overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-blue-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"></div>
+                                    <div className="relative z-10 flex flex-col items-center text-center">
+                                        <div className="bg-blue-500/10 w-12 h-12 rounded-full flex items-center justify-center text-blue-400 mb-3 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(59,130,246,0.15)] border border-blue-500/20">
+                                            <Droplets size={22} />
+                                        </div>
+                                        <p className="text-subtext text-[10px] font-bold uppercase tracking-widest mb-1">{t('hydrate')}</p>
+                                        <p className="text-text font-black text-xl tracking-tight">+250ml</p>
+                                    </div>
+                                </button>
+
+                                <button 
+                                    onClick={() => setActiveModal('Meal')}
+                                    className="glass-panel p-5 rounded-[1.5rem] hover:border-orange-400/50 transition-all hover:scale-[1.02] active:scale-95 group relative overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-orange-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"></div>
+                                    <div className="relative z-10 flex flex-col items-center text-center">
+                                        <div className="bg-orange-500/10 w-12 h-12 rounded-full flex items-center justify-center text-orange-400 mb-3 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(249,115,22,0.15)] border border-orange-500/20">
+                                            <Flame size={22} />
+                                        </div>
+                                        <p className="text-subtext text-[10px] font-bold uppercase tracking-widest mb-1">{t('fuel')}</p>
+                                        <p className="text-text font-black text-xl tracking-tight">LOG MEAL</p>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <Modal isOpen={activeModal === 'StepWalk'} onClose={() => setActiveModal(null)} title={t('logActivity')}>
+                        <form onSubmit={handleWalkSubmit} className="space-y-6">
+                        <div className="p-6 bg-white/5 rounded-2xl border border-white/5 text-center">
+                            <label className="text-xs text-subtext font-bold uppercase mb-4 block tracking-widest">Duration</label>
+                            <div className="flex items-baseline justify-center gap-2">
+                                <input name="duration" type="number" min="1" defaultValue="30" className="bg-transparent text-6xl font-black text-text text-center w-32 outline-none focus:border-b-2 border-accent transition-all" autoFocus />
+                                <span className="text-subtext font-bold text-lg">MIN</span>
+                            </div>
+                        </div>
+                        <button type="submit" className="w-full bg-accent text-black font-black py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg hover:shadow-[0_0_20px_var(--accent-glow)]">{t('confirm')}</button>
+                        </form>
+                    </Modal>
+
+                    <Modal isOpen={activeModal === 'Meal'} onClose={() => setActiveModal(null)} title={t('fuel')}>
+                        <form onSubmit={handleMealSubmit} className="space-y-6">
+                        <div className="relative bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <label className="text-xs text-subtext font-bold uppercase ml-1 tracking-widest">Calories</label>
+                            <input name="cals" type="number" placeholder="0" className="w-full bg-transparent border-none p-2 text-text text-4xl font-black mt-1 focus:ring-0 outline-none" autoFocus />
+                            <span className="absolute right-6 top-8 text-subtext font-bold text-sm">KCAL</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-3">
+                            {['Protein', 'Carbs', 'Fat'].map((macro, i) => (
+                                <div key={macro} className="bg-white/5 p-3 rounded-xl border border-white/5 text-center">
+                                    <label className="text-[10px] text-subtext font-bold uppercase block mb-1">{macro}</label>
+                                    <input name={macro === 'Protein' ? 'prot' : macro === 'Carbs' ? 'carb' : 'fat'} type="number" placeholder="0" className="w-full bg-transparent text-text font-bold outline-none border-b border-white/10 focus:border-accent text-center pb-1" />
+                                    <span className="block text-center text-[10px] text-subtext mt-1">g</span>
+                                </div>
+                            ))}
+                        </div>
+                        <button type="submit" className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-black py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg hover:shadow-orange-500/20">{t('confirm')}</button>
+                        </form>
+                    </Modal>
+                </div>
+            );
+        };
+
+        // --- Hub ---
+        const Hub = () => {
+            const { profile, dailyStats, achievements, t } = useTracker();
+            const [activeApp, setActiveApp] = useState(null);
+
+            const BreathingApp = () => {
+                const [phase, setPhase] = useState('Inhale');
+                const [scale, setScale] = useState(1);
+                
+                useEffect(() => {
+                    const interval = setInterval(() => {
+                        setPhase(p => {
+                            if (p === 'Inhale') { setScale(1.5); return 'Hold'; }
+                            if (p === 'Hold') { setScale(1.5); return 'Exhale'; }
+                            if (p === 'Exhale') { setScale(1); return 'Inhale'; }
+                            return 'Inhale';
+                        });
+                    }, 4000);
+                    return () => clearInterval(interval);
+                }, []);
+
+                return (
+                    <div className="flex flex-col items-center justify-center h-80 relative">
+                        <div className={`absolute w-48 h-48 rounded-full border border-blue-500/30 transition-all duration-[4000ms] ease-in-out`} style={{ transform: `scale(${scale * 1.2})`, opacity: 1 - scale/2 }}></div>
+                        <div className={`absolute w-64 h-64 rounded-full border border-blue-500/10 transition-all duration-[4000ms] ease-in-out`} style={{ transform: `scale(${scale * 1.5})`, opacity: 1 - scale/3 }}></div>
+                        <div 
+                            className="w-40 h-40 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-[0_0_60px_rgba(59,130,246,0.3)] transition-all duration-[4000ms] ease-in-out z-10"
+                            style={{ transform: `scale(${scale})` }}
+                        >
+                            <span className="text-white font-black text-2xl animate-pulse">{phase}</span>
+                        </div>
+                        <p className="mt-12 text-blue-300 font-bold tracking-widest uppercase text-xs">Box Breathing • 4s Cycles</p>
+                    </div>
+                );
+            };
+
+            const IntervalTimer = () => {
+                const [time, setTime] = useState(0);
+                const [isRunning, setIsRunning] = useState(false);
+                const [mode, setMode] = useState('Work');
+                
+                useEffect(() => {
+                    let interval;
+                    if (isRunning) interval = setInterval(() => setTime(t => t + 1), 1000);
+                    return () => clearInterval(interval);
+                }, [isRunning]);
+
+                const fmt = (s) => {
+                    const m = Math.floor(s / 60).toString().padStart(2, '0');
+                    const sec = (s % 60).toString().padStart(2, '0');
+                    return `${m}:${sec}`;
+                };
+
+                return (
+                    <div className="text-center py-8">
+                        <div className="flex justify-center gap-4 mb-8">
+                            <button onClick={() => setMode('Work')} className={`px-6 py-2 rounded-full font-bold transition-all text-xs tracking-widest ${mode === 'Work' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'bg-white/5 text-gray-500'}`}>WORK</button>
+                            <button onClick={() => setMode('Rest')} className={`px-6 py-2 rounded-full font-bold transition-all text-xs tracking-widest ${mode === 'Rest' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30' : 'bg-white/5 text-gray-500'}`}>REST</button>
+                        </div>
+                        <div className={`text-8xl font-black font-display mb-8 tracking-tighter tabular-nums drop-shadow-2xl ${mode === 'Work' ? 'text-orange-500' : 'text-blue-500'}`}>
+                            {fmt(time)}
+                        </div>
+                        <div className="flex justify-center gap-6">
+                            <button onClick={() => setIsRunning(!isRunning)} className={`w-20 h-20 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90 ${isRunning ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30' : 'bg-accent text-black shadow-lg shadow-accent/30'}`}>
+                                {isRunning ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
+                            </button>
+                            <button onClick={() => { setIsRunning(false); setTime(0); }} className="w-20 h-20 rounded-full bg-white/10 text-white flex items-center justify-center transition-all hover:scale-110 hover:bg-white/20 active:scale-90">
+                                <RotateCcw size={28} />
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+            const TrophyRoom = () => (
+                <div className="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {achievements.map((a, i) => {
+                        const Icon = a.icon;
+                        return (
+                        <div key={a.id} className={`p-4 rounded-2xl border transition-all duration-500 ${a.unlocked ? 'bg-gradient-to-br from-yellow-500/10 to-orange-500/5 border-yellow-500/40 scale-100' : 'bg-white/5 border-white/5 grayscale opacity-40 scale-95'}`} style={{animationDelay: `${i*100}ms`}}>
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${a.unlocked ? 'bg-gradient-to-r from-yellow-400 to-orange-500 shadow-lg shadow-yellow-500/20 text-black' : 'bg-gray-800 text-gray-500'}`}>
+                                <Icon size={24} />
+                            </div>
+                            <p className={`font-bold text-sm ${a.unlocked ? 'text-text' : 'text-subtext'}`}>{a.title}</p>
+                            <p className="text-[10px] text-subtext mt-1 leading-tight">{a.description}</p>
+                        </div>
+                    )})}
+                </div>
+            );
+
+            const RecipeAI = () => (
+                <div className="p-6 text-center">
+                    <Utensils size={48} className="mx-auto text-green-500 mb-4 drop-shadow-[0_0_15px_rgba(34,197,94,0.4)]" />
+                    <h3 className="text-xl font-bold text-text mb-2">Smart Recipe Gen</h3>
+                    <p className="text-subtext mb-6">Ask System Guide for recipes based on your {dailyStats.caloriesConsumed} kcal consumed today.</p>
+                    <button className="bg-accent text-black px-6 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition-transform">Generate Meal Plan</button>
+                </div>
+            );
+
+            const SleepLab = () => (
+                <div className="p-4">
+                    <div className="h-48 w-full bg-gray-800/30 rounded-xl mb-4 flex items-end justify-between px-2 pb-2 border border-white/5">
+                        {[4,7,5,8,6,7,8].map((h,i) => (
+                            <div key={i} className="w-8 bg-purple-500/50 rounded-t-lg hover:bg-purple-500 transition-colors shadow-[0_0_10px_rgba(168,85,247,0.3)]" style={{height: `${h*10}%`}}></div>
+                        ))}
+                    </div>
+                    <p className="text-center text-subtext text-xs uppercase tracking-widest">Last 7 Days Sleep Quality</p>
+                </div>
+            );
+
+            const exportData = () => {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ profile, logs: [] }, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "ascend_data.json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            };
+
+            const apps = [
+                { id: 'breathe', name: t('mindfulness'), sub: 'Reduce Stress', icon: Wind, color: 'from-cyan-400 to-blue-500', component: <BreathingApp />, size: 'large' },
+                { id: 'timer', name: t('workout'), sub: 'HIIT & Cardio', icon: Timer, color: 'from-orange-400 to-red-500', component: <IntervalTimer />, size: 'normal' },
+                { id: 'recipes', name: 'Recipes', sub: 'Meal Ideas', icon: Utensils, color: 'from-emerald-400 to-green-600', component: <RecipeAI />, size: 'normal' },
+                { id: 'sleep', name: 'Sleep Lab', sub: 'Analyze Rest', icon: Moon, color: 'from-violet-400 to-purple-600', component: <SleepLab />, size: 'normal' },
+                { id: 'trophies', name: t('trophies'), sub: 'Your Awards', icon: Trophy, color: 'from-amber-300 to-yellow-500', component: <TrophyRoom />, size: 'wide' },
+                { id: 'export', name: t('export'), sub: 'JSON Backup', icon: Download, color: 'from-slate-500 to-gray-700', action: exportData, size: 'normal' },
+            ];
+
+            return (
+                <div className="w-full max-w-5xl mx-auto space-y-6 text-text pb-24">
+                    <h2 className="text-3xl font-black slide-up-fade text-text">{t('apps')}</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[160px] grid-flow-dense">
+                        {apps.map((app, i) => {
+                            const AppIcon = app.icon;
+                            return (
+                            <button 
+                                key={app.id}
+                                onClick={() => app.action ? app.action() : setActiveApp(app.id)}
+                                className={`
+                                    relative group overflow-hidden rounded-3xl border border-white/10 transition-all duration-500 hover:z-10 hover:border-white/20 hover:scale-[1.02]
+                                    ${app.size === 'large' ? 'col-span-2 row-span-2' : app.size === 'wide' ? 'col-span-2' : 'col-span-1'}
+                                    glass-panel slide-up-fade text-left shadow-lg
+                                `}
+                                style={{animationDelay: `${i * 100}ms`}}
+                            >
+                                <div className={`absolute inset-0 bg-gradient-to-br ${app.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
+                                <div className={`absolute -bottom-10 -right-10 w-32 h-32 bg-gradient-to-br ${app.color} blur-[60px] opacity-20 group-hover:opacity-40 transition-all duration-700 group-hover:scale-150`}></div>
+
+                                <div className="absolute inset-0 p-6 flex flex-col justify-between items-start">
+                                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${app.color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500`}>
+                                        <AppIcon size={24} />
+                                    </div>
+                                    
+                                    <div>
+                                        <span className="block text-lg font-bold text-text group-hover:translate-x-1 transition-transform">{app.name}</span>
+                                        <span className="block text-xs text-subtext font-medium group-hover:text-text transition-colors">{app.sub}</span>
+                                    </div>
+                                </div>
+                            </button>
+                        )})}
+                    </div>
+
+                    <Modal isOpen={!!activeApp} onClose={() => setActiveApp(null)} title={apps.find(a => a.id === activeApp)?.name || ''}>
+                        {apps.find(a => a.id === activeApp)?.component}
+                    </Modal>
+                </div>
+            );
+        };
+
+        // --- Journal ---
+        class ErrorBoundary extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false };
+            }
+
+            static getDerivedStateFromError() {
+                return { hasError: true };
+            }
+
+            componentDidCatch(error, errorInfo) {
+                console.error("Chart Error:", error, errorInfo);
+            }
+
+            render() {
+                if (this.state.hasError) {
+                    return (
+                    <div className="h-full w-full flex items-center justify-center bg-white/5 rounded-xl border border-white/10 flex-col gap-2">
+                        <Activity className="text-subtext opacity-50" />
+                        <p className="text-xs text-subtext font-mono">Chart Unavailable</p>
+                    </div>
+                    );
+                }
+                return this.props.children; 
+            }
+        }
+
+        const Journal = () => {
+            const { logs, profile, addLog } = useTracker();
+            const [showSleepModal, setShowSleepModal] = useState(false);
+
+            const getChartData = () => {
+                const data = logs.filter(l => l.type === 'Weight').slice(0, 10).reverse().map(l => ({
+                    date: new Date(l.timestamp).toLocaleDateString('en-US', {weekday: 'short'}),
+                    display: profile.unitSystem === 'imperial' ? Number(l.value) * 2.20462 : Number(l.value)
+                }));
+                return data.length < 2 ? Array.from({length: 7}).map((_, i) => ({ date: ['M','T','W','T','F','S','S'][i], display: profile.weightKg })) : data;
+            };
+
+            const getIcon = (type) => {
+                const cls = "w-5 h-5";
+                switch(type) {
+                case 'Water': return <Droplets className={`text-blue-400 ${cls}`} />;
+                case 'Meal': return <Utensils className={`text-orange-400 ${cls}`} />;
+                case 'Sleep': return <Moon className={`text-purple-400 ${cls}`} />;
+                case 'StepWalk': return <Footprints className={`text-green-400 ${cls}`} />;
+                default: return <Activity className={`text-gray-400 ${cls}`} />;
+                }
+            };
+
+            return (
+                <div className="pb-24 space-y-8 w-full max-w-5xl mx-auto">
+                    <div className="flex justify-between items-center slide-up-fade">
+                        <h2 className="text-3xl font-black text-text">Journal</h2>
+                        <button 
+                            onClick={() => setShowSleepModal(true)}
+                            className="group relative px-5 py-2 rounded-full bg-white/5 border border-white/10 hover:border-[#536DFE]/50 transition-all hover:bg-[#536DFE]/10 overflow-hidden"
+                        >
+                            <span className="relative z-10 flex items-center gap-2 text-sm font-bold text-gray-300 group-hover:text-[#536DFE] transition-colors">
+                                <Moon size={16} /> Log Sleep
+                            </span>
+                        </button>
+                    </div>
+                    
+                    <div className="glass-panel p-6 rounded-[2rem] relative overflow-hidden group slide-up-fade stagger-1">
+                        <div className="flex justify-between items-center mb-6 relative z-10">
+                            <h3 className="text-xs font-bold text-subtext uppercase tracking-widest">Weight Trend</h3>
+                            <span className="text-accent font-mono text-xs border border-accent/30 px-2 py-0.5 rounded">{profile.unitSystem}</span>
+                        </div>
+                        
+                        <div className="h-64 w-full relative z-10">
+                        <ErrorBoundary>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={getChartData()}>
+                                <defs>
+                                    <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.3}/>
+                                    <stop offset="95%" stopColor="var(--accent)" stopOpacity={0}/>
+                                    </linearGradient>
+                                </defs>
+                                <XAxis dataKey="date" stroke="#444" fontSize={10} tickLine={false} axisLine={false} dy={10} />
+                                <Tooltip 
+                                    cursor={{ stroke: 'var(--accent)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                    contentStyle={{ backgroundColor: 'var(--card)', borderColor: '#333', borderRadius: '12px', color: 'var(--text)', padding: '10px' }}
+                                    itemStyle={{ color: 'var(--accent)', fontWeight: 'bold' }}
+                                />
+                                <Area 
+                                    type="monotone" 
+                                    dataKey="display" 
+                                    stroke="var(--accent)" 
+                                    strokeWidth={3} 
+                                    fillOpacity={1} 
+                                    fill="url(#colorWeight)" 
+                                    animationDuration={2000}
+                                    animationEasing="ease-out"
+                                />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </ErrorBoundary>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        {logs.slice(0, 15).map((log, idx) => (
+                            <div 
+                                key={log.id} 
+                                className="bg-white/5 hover:bg-white/10 p-4 rounded-2xl border border-white/5 flex items-center justify-between transition-all hover:scale-[1.01] hover:border-white/20 hover:shadow-lg cursor-pointer group slide-up-fade"
+                                style={{animationDelay: `${idx * 50 + 200}ms`}}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center border border-white/5 group-hover:border-white/20 transition-colors">
+                                        {getIcon(log.type)}
+                                    </div>
+                                    <div>
+                                        <p className="text-text font-bold text-sm group-hover:translate-x-1 transition-transform">{log.type === 'StepWalk' ? 'Walking' : log.type}</p>
+                                        <p className="text-xs text-subtext">{new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex items-center gap-4">
+                                    <div className="text-right">
+                                        <p className="text-text font-black text-sm">
+                                            {log.type === 'Water' ? `+${log.value}L` : 
+                                            log.type === 'Meal' ? `+${log.value} kcal` :
+                                            log.type === 'StepWalk' ? `+${log.value}` : 
+                                            log.value}
+                                            {log.type === 'StepWalk' && <span className="text-xs text-subtext font-normal ml-1">steps</span>}
+                                        </p>
+                                    </div>
+                                    <ChevronRight size={16} className="text-gray-600 group-hover:text-text transition-colors" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <Modal isOpen={showSleepModal} onClose={() => setShowSleepModal(false)} title="Log Sleep">
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const formData = new FormData(e.currentTarget);
+                            addLog({ type: 'Sleep', value: parseFloat(formData.get('duration')), meta: { quality: parseInt(formData.get('quality')) } });
+                            setShowSleepModal(false);
+                        }} className="space-y-6">
+                            <div className="bg-white/5 p-6 rounded-2xl text-center border border-white/5">
+                                <label className="text-xs text-subtext font-bold uppercase mb-2 block tracking-widest">Duration</label>
+                                <div className="text-6xl font-black text-text mb-4"><span id="sleepDisplay">7.5</span> <span className="text-xl text-subtext">hrs</span></div>
+                                <input name="duration" type="range" min="1" max="12" step="0.5" defaultValue="7.5" className="w-full accent-[#536DFE] h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer" onInput={(e) => { const el = document.getElementById('sleepDisplay'); if(el) el.innerText = e.target.value; }} />
+                            </div>
+                            <div className="flex justify-between gap-2">
+                                {[1, 2, 3, 4, 5].map(num => (
+                                    <label key={num} className="flex-1 cursor-pointer group">
+                                        <input type="radio" name="quality" value={num} className="peer hidden" defaultChecked={num === 3} />
+                                        <div className="h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center peer-checked:bg-[#536DFE] peer-checked:text-white transition-all group-hover:border-white/30 font-bold text-subtext">
+                                            <span>{num}</span>
+                                        </div>
+                                    </label>
+                                ))}
+                            </div>
+                            <button type="submit" className="w-full bg-[#536DFE] text-white font-bold py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg hover:shadow-[#536DFE]/20">SAVE SLEEP</button>
+                        </form>
+                    </Modal>
+                </div>
+            );
+        };
+
+        // --- Onboarding ---
+        const Onboarding = () => {
+            const { updateProfile, profile } = useTracker();
+            const [step, setStep] = useState(1);
+            const [formData, setFormData] = useState({
+                age: profile.age,
+                gender: profile.gender,
+                heightCm: profile.heightCm,
+                weightKg: profile.weightKg,
+                unitSystem: profile.unitSystem,
+                goal: profile.goal,
+                activityLevel: profile.activityLevel,
+            });
+
+            const totalSteps = 3;
+            const progress = (step / totalSteps) * 100;
+
+            const handleNext = () => {
+                if (step < totalSteps) {
+                    setStep(prev => prev + 1);
+                } else {
+                    updateProfile({ ...formData, isOnboarded: true });
+                }
+            };
+
+            const updateData = (key, value) => {
+                setFormData(prev => ({ ...prev, [key]: value }));
+            };
+
+            const displayHeight = formData.unitSystem === 'metric' ? formData.heightCm : (formData.heightCm / 2.54).toFixed(1);
+            const displayWeight = formData.unitSystem === 'metric' ? formData.weightKg : (formData.weightKg * 2.20462).toFixed(1);
+
+            const handleHeightInput = (val) => {
+                const num = parseFloat(val) || 0;
+                if (formData.unitSystem === 'metric') updateData('heightCm', num);
+                else updateData('heightCm', num * 2.54);
+            };
+
+            const handleWeightInput = (val) => {
+                const num = parseFloat(val) || 0;
+                if (formData.unitSystem === 'metric') updateData('weightKg', num);
+                else updateData('weightKg', num / 2.20462);
+            };
+
+            return (
+                <div className="min-h-screen w-full flex items-center justify-center p-4 bg-background relative overflow-hidden">
+                     <div className="bg-mesh"></div>
+                    
+                    <div className="w-full max-w-lg relative z-10">
+                        <div className="mb-8">
+                            <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+                                <div className="h-full bg-gradient-to-r from-accent to-emerald-400 transition-all duration-500 ease-out shadow-[0_0_10px_var(--accent)]" style={{ width: `${progress}%` }}></div>
+                            </div>
+                            <div className="flex justify-between mt-3 text-xs text-subtext font-bold uppercase tracking-widest">
+                                <span>Step {step} of {totalSteps}</span>
+                                <span>Config</span>
+                            </div>
+                        </div>
+
+                        <div className="glass-panel p-8 rounded-[2rem] shadow-2xl animate-in slide-in-from-bottom-8 duration-500 border border-white/10">
+                            
+                            {step === 1 && (
+                                <div className="space-y-6">
+                                    <h2 className="text-3xl font-black text-text">Bio Data</h2>
+                                    <p className="text-subtext">Calibrate system for biological metrics.</p>
+                                    
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-subtext uppercase tracking-widest block mb-2">Age</label>
+                                            <input 
+                                                type="number" 
+                                                value={formData.age}
+                                                onChange={e => updateData('age', parseInt(e.target.value))}
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-text text-lg font-bold focus:border-[#00E676] outline-none transition-colors"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-subtext uppercase tracking-widest block mb-2">Gender</label>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {['Male', 'Female', 'Other'].map(g => (
+                                                    <button
+                                                        key={g}
+                                                        onClick={() => updateData('gender', g)}
+                                                        className={`p-3 rounded-xl border font-bold transition-all ${formData.gender === g ? 'bg-[#00E676] text-black border-[#00E676]' : 'bg-white/5 text-subtext border-white/10 hover:bg-white/10'}`}
+                                                    >
+                                                        {g}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {step === 2 && (
+                                <div className="space-y-6">
+                                    <h2 className="text-3xl font-black text-text">Metrics</h2>
+                                    <p className="text-subtext">Set standard units for calculation.</p>
+                                    
+                                    <div className="flex bg-white/5 rounded-lg p-1 border border-white/10 w-fit mb-6">
+                                        <button 
+                                            onClick={() => updateData('unitSystem', 'metric')}
+                                            className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${formData.unitSystem === 'metric' ? 'bg-[#00E676] text-black' : 'text-subtext hover:text-white'}`}
+                                        >
+                                            Metric
+                                        </button>
+                                        <button 
+                                            onClick={() => updateData('unitSystem', 'imperial')}
+                                            className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${formData.unitSystem === 'imperial' ? 'bg-[#00E676] text-black' : 'text-subtext hover:text-white'}`}
+                                        >
+                                            Imperial
+                                        </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-subtext uppercase tracking-widest block mb-2 flex items-center gap-2"><Ruler size={14} /> Height</label>
+                                            <div className="relative">
+                                                <input 
+                                                    type="number" 
+                                                    value={displayHeight}
+                                                    onChange={e => handleHeightInput(e.target.value)}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-text text-lg font-bold focus:border-[#00E676] outline-none transition-colors"
+                                                />
+                                                <span className="absolute right-4 top-5 text-sm text-subtext font-bold">{formData.unitSystem === 'metric' ? 'cm' : 'in'}</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-subtext uppercase tracking-widest block mb-2 flex items-center gap-2"><Scale size={14} /> Weight</label>
+                                            <div className="relative">
+                                                <input 
+                                                    type="number" 
+                                                    value={displayWeight}
+                                                    onChange={e => handleWeightInput(e.target.value)}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-text text-lg font-bold focus:border-[#00E676] outline-none transition-colors"
+                                                />
+                                                <span className="absolute right-4 top-5 text-sm text-subtext font-bold">{formData.unitSystem === 'metric' ? 'kg' : 'lbs'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {step === 3 && (
+                                <div className="space-y-6">
+                                    <h2 className="text-3xl font-black text-text">Objective</h2>
+                                    <p className="text-subtext">Define primary system directive.</p>
+                                    
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-subtext uppercase tracking-widest block mb-2 flex items-center gap-2"><Target size={14} /> Primary Goal</label>
+                                            <select 
+                                                value={formData.goal}
+                                                onChange={e => updateData('goal', e.target.value)}
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-text font-bold focus:border-[#00E676] outline-none transition-colors appearance-none"
+                                            >
+                                                <option className="bg-[#1A1A2E]" value="Lose Weight">Lose Weight</option>
+                                                <option className="bg-[#1A1A2E]" value="Maintain">Maintain</option>
+                                                <option className="bg-[#1A1A2E]" value="Gain Muscle">Gain Muscle</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-[10px] font-bold text-subtext uppercase tracking-widest block mb-2 flex items-center gap-2"><Activity size={14} /> Activity Level</label>
+                                            <div className="space-y-2">
+                                                {[
+                                                    { val: 'sedentary', label: 'Sedentary', sub: 'Little to no exercise' },
+                                                    { val: 'moderate', label: 'Moderate', sub: 'Exercise 3-5x week' },
+                                                    { val: 'active', label: 'Active', sub: 'Daily exercise/physical job' },
+                                                ].map(opt => (
+                                                    <button
+                                                        key={opt.val}
+                                                        onClick={() => updateData('activityLevel', opt.val)}
+                                                        className={`w-full p-4 rounded-xl border text-left transition-all ${formData.activityLevel === opt.val ? 'bg-white/10 border-[#00E676]' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
+                                                    >
+                                                        <div className="flex justify-between items-center">
+                                                            <div>
+                                                                <p className={`font-bold ${formData.activityLevel === opt.val ? 'text-[#00E676]' : 'text-text'}`}>{opt.label}</p>
+                                                                <p className="text-xs text-subtext">{opt.sub}</p>
+                                                            </div>
+                                                            {formData.activityLevel === opt.val && <Check size={18} className="text-[#00E676]" />}
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="mt-8 flex justify-end">
+                                <button 
+                                    onClick={handleNext}
+                                    className="bg-white text-black font-black py-4 px-8 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg flex items-center gap-2"
+                                >
+                                    {step === totalSteps ? 'LAUNCH SYSTEM' : 'PROCEED'}
+                                    <ArrowRight size={20} />
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Settings & Profile ---
+        const Settings = ({ onBack }) => {
+            const { profile, updateProfile, resetData, t } = useTracker();
+            const [showLangMenu, setShowLangMenu] = useState(false);
+
+            const languages = [
+                { code: 'en', name: 'English' },
+                { code: 'es', name: 'Español' },
+                { code: 'fr', name: 'Français' },
+                { code: 'de', name: 'Deutsch' },
+                { code: 'hi', name: 'हिन्दी (Hindi)' },
+                { code: 'ja', name: '日本語 (Japanese)' },
+            ];
+
+            const colors = [
+                { name: 'Green', hex: '#00E676' },
+                { name: 'Blue', hex: '#536DFE' },
+                { name: 'Purple', hex: '#7E57C2' },
+                { name: 'Orange', hex: '#FF9100' },
+                { name: 'Red', hex: '#F44336' },
+                { name: 'Pink', hex: '#E91E63' },
+            ];
+
+            const SectionHeader = ({ title }) => (
+                <h3 className="text-xs font-bold text-subtext uppercase tracking-widest px-2 mb-2 mt-6">{title}</h3>
+            );
+
+            const SettingItem = ({ icon: Icon, label, subLabel, onClick, children, isDestructive }) => (
+                <div 
+                    onClick={onClick}
+                    className={`
+                    flex items-center justify-between p-4 bg-card/50 hover:bg-white/5 border-b border-border last:border-b-0 cursor-pointer transition-all group
+                    ${isDestructive ? 'hover:bg-red-500/10' : ''}
+                    `}
+                >
+                    <div className="flex items-center gap-4">
+                    <div className={`
+                        w-8 h-8 rounded-lg flex items-center justify-center 
+                        ${isDestructive ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-subtext group-hover:text-text group-hover:bg-white/10'}
+                        transition-colors
+                    `}>
+                        <Icon size={18} />
+                    </div>
+                    <div>
+                        <p className={`font-medium text-sm ${isDestructive ? 'text-red-400' : 'text-text'}`}>{label}</p>
+                        {subLabel && <p className="text-xs text-subtext">{subLabel}</p>}
+                    </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                    {children}
+                    </div>
+                </div>
+            );
+
+            const Toggle = ({ checked, onChange }) => (
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onChange(); }}
+                    className={`w-12 h-6 rounded-full relative transition-colors duration-300 ${checked ? 'bg-accent shadow-[0_0_10px_var(--accent-glow)]' : 'bg-gray-700'}`}
+                >
+                    <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform duration-300 ${checked ? 'translate-x-6' : 'translate-x-0'}`} />
+                </button>
+            );
+
+            if (showLangMenu) {
+                return (
+                <div className="pb-24 animate-in slide-in-from-right duration-300 text-text">
+                    <div className="flex items-center gap-3 mb-6">
+                    <button onClick={() => setShowLangMenu(false)} className="p-2 rounded-full hover:bg-white/10 text-text"><ArrowLeft size={24} /></button>
+                    <h2 className="text-2xl font-bold">{t('language')}</h2>
+                    </div>
+                    <div className="bg-card rounded-2xl border border-border overflow-hidden">
+                    {languages.map(lang => (
+                        <div 
+                        key={lang.code}
+                        onClick={() => { updateProfile({ language: lang.code }); setShowLangMenu(false); }}
+                        className="flex items-center justify-between p-4 border-b border-border last:border-0 hover:bg-white/5 cursor-pointer"
+                        >
+                        <span className="text-text">{lang.name}</span>
+                        {profile.language === lang.code && <Check size={18} className="text-accent" />}
+                        </div>
+                    ))}
+                    </div>
+                </div>
+                );
+            }
+
+            return (
+                <div className="pb-24 space-y-6 animate-in slide-in-from-right duration-300 w-full max-w-2xl mx-auto text-text">
+                    <div className="flex items-center gap-3">
+                        <button onClick={onBack} className="p-2 rounded-full hover:bg-white/10 text-text">
+                        <ArrowLeft size={24} />
+                        </button>
+                        <h2 className="text-3xl font-black">{t('settings')}</h2>
+                    </div>
+
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-card to-transparent rounded-2xl border border-border mb-6">
+                        <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center text-black font-black text-2xl shadow-lg shadow-accent/20">
+                            {profile.name.charAt(0)}
+                        </div>
+                        <div>
+                            <p className="text-lg font-bold text-text">{profile.name}</p>
+                            <p className="text-xs text-subtext">{profile.gender} • {profile.age} years</p>
+                        </div>
+                        </div>
+
+                        <SectionHeader title={t('general')} />
+                        <div className="bg-card rounded-2xl border border-border overflow-hidden backdrop-blur-md">
+                        <SettingItem 
+                            icon={Globe} 
+                            label={t('language')} 
+                            subLabel={languages.find(l => l.code === profile.language)?.name}
+                            onClick={() => setShowLangMenu(true)}
+                        >
+                            <ChevronRight size={18} className="text-subtext" />
+                        </SettingItem>
+                        
+                        <SettingItem icon={Scale} label={t('units')}>
+                            <div className="flex bg-gray-900/50 rounded-lg p-1 border border-border">
+                            <button 
+                                onClick={() => updateProfile({ unitSystem: 'metric' })}
+                                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${profile.unitSystem === 'metric' ? 'bg-accent text-black shadow' : 'text-subtext'}`}
+                            >
+                                {t('metric')}
+                            </button>
+                            <button 
+                                onClick={() => updateProfile({ unitSystem: 'imperial' })}
+                                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${profile.unitSystem === 'imperial' ? 'bg-accent text-black shadow' : 'text-subtext'}`}
+                            >
+                                {t('imperial')}
+                            </button>
+                            </div>
+                        </SettingItem>
+                        </div>
+
+                        <SectionHeader title={t('appearance')} />
+                        <div className="bg-card rounded-2xl border border-border overflow-hidden backdrop-blur-md">
+                        <SettingItem icon={profile.themeMode === 'dark' ? Moon : Sun} label={t('theme')} subLabel={profile.themeMode === 'dark' ? t('dark') : t('light')}>
+                            <div className="flex items-center bg-gray-900/50 rounded-lg p-1 border border-border">
+                                <button onClick={() => updateProfile({ themeMode: 'dark' })} className={`p-1.5 rounded-md ${profile.themeMode === 'dark' ? 'bg-gray-700 text-white' : 'text-subtext'}`}><Moon size={14} /></button>
+                                <button onClick={() => updateProfile({ themeMode: 'light' })} className={`p-1.5 rounded-md ${profile.themeMode === 'light' ? 'bg-white text-black' : 'text-subtext'}`}><Sun size={14} /></button>
+                            </div>
+                        </SettingItem>
+                        
+                        <SettingItem icon={Palette} label={t('accent')}>
+                            <div className="flex gap-2">
+                                {colors.map(c => (
+                                <button 
+                                    key={c.hex}
+                                    onClick={() => updateProfile({ themeColor: c.hex })}
+                                    className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${profile.themeColor === c.hex ? 'border-text scale-110 shadow-[0_0_10px_white]' : 'border-transparent'}`}
+                                    style={{ backgroundColor: c.hex }}
+                                />
+                                ))}
+                            </div>
+                        </SettingItem>
+                        </div>
+
+                        <SectionHeader title={t('notifications')} />
+                        <div className="bg-card rounded-2xl border border-border overflow-hidden backdrop-blur-md">
+                        <SettingItem icon={Bell} label={t('notifications')}>
+                            <Toggle checked={profile.notifications} onChange={() => updateProfile({ notifications: !profile.notifications })} />
+                        </SettingItem>
+                        <SettingItem icon={SmartphoneNfc} label={t('haptics')}>
+                            <Toggle checked={profile.haptics} onChange={() => updateProfile({ haptics: !profile.haptics })} />
+                        </SettingItem>
+                        </div>
+
+                        <SectionHeader title={t('privacy')} />
+                        <div className="bg-card rounded-2xl border border-border overflow-hidden backdrop-blur-md">
+                        <SettingItem icon={Lock} label="Privacy Mode" subLabel="Hide sensitive values on dashboard">
+                            <Toggle checked={profile.privacyMode} onChange={() => updateProfile({ privacyMode: !profile.privacyMode })} />
+                        </SettingItem>
+                        
+                        <SettingItem icon={Download} label={t('export')} onClick={() => {
+                            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(profile));
+                            const downloadAnchorNode = document.createElement('a');
+                            downloadAnchorNode.setAttribute("href", dataStr);
+                            downloadAnchorNode.setAttribute("download", "ascend_profile.json");
+                            document.body.appendChild(downloadAnchorNode);
+                            downloadAnchorNode.click();
+                            downloadAnchorNode.remove();
+                        }}>
+                            <ChevronRight size={18} className="text-subtext" />
+                        </SettingItem>
+                        
+                        <SettingItem 
+                            icon={Trash2} 
+                            label={t('reset')}
+                            subLabel="Clear all logs and settings" 
+                            isDestructive 
+                            onClick={() => { if(confirm(t('resetConfirm'))) resetData(); }}
+                        >
+                            <ChevronRight size={18} className="text-red-500/50" />
+                        </SettingItem>
+                        </div>
+                        
+                        <div className="pt-8 text-center pb-8">
+                            <p className="text-xs text-subtext font-mono">Ascend OS v4.5.0 (Offline Core)</p>
+                            <div className="flex justify-center gap-4 mt-2">
+                                <a href="#" className="text-xs text-subtext hover:text-text">Privacy Policy</a>
+                                <a href="#" className="text-xs text-subtext hover:text-text">Terms of Service</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        };
+
+        const Profile = () => {
+            const { profile, updateProfile, resetData, t } = useTracker();
+            const [formData, setFormData] = useState(profile);
+            const [saved, setSaved] = useState(false);
+            const [showSettings, setShowSettings] = useState(false);
+
+            const calculateBMI = (w, h) => (w / ((h/100) * (h/100))).toFixed(1);
+
+            const handleSave = () => {
+                updateProfile(formData);
+                setSaved(true);
+                setTimeout(() => setSaved(false), 2000);
+            };
+
+            const heightVal = profile.unitSystem === 'imperial' ? (formData.heightCm / 2.54).toFixed(1) : formData.heightCm;
+            const weightVal = profile.unitSystem === 'imperial' ? (formData.weightKg * 2.20462).toFixed(1) : formData.weightKg;
+            const waistVal = profile.unitSystem === 'imperial' ? ((formData.waistCm || 80) / 2.54).toFixed(1) : (formData.waistCm || 80);
+
+            const handleHeightChange = (val) => {
+                const num = parseFloat(val);
+                if (profile.unitSystem === 'imperial') setFormData({...formData, heightCm: num * 2.54});
+                else setFormData({...formData, heightCm: num});
+            };
+
+            const handleWeightChange = (val) => {
+                const num = parseFloat(val);
+                if (profile.unitSystem === 'imperial') setFormData({...formData, weightKg: num / 2.20462});
+                else setFormData({...formData, weightKg: num});
+            };
+
+            const handleWaistChange = (val) => {
+                const num = parseFloat(val);
+                if (profile.unitSystem === 'imperial') setFormData({...formData, waistCm: num * 2.54});
+                else setFormData({...formData, waistCm: num});
+            };
+
+            if (showSettings) {
+                return <Settings onBack={() => setShowSettings(false)} />;
+            }
+
+            return (
+                <div className="pb-24 space-y-6 animate-in slide-in-from-bottom-4 duration-500 w-full max-w-2xl mx-auto">
+                <div className="flex items-center justify-between text-text">
+                    <h2 className="text-3xl font-black">{t('profile')}</h2>
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => setShowSettings(true)} className="bg-card p-2 rounded-full text-subtext hover:text-text border border-border hover:border-text/20 transition-all">
+                            <SettingsIcon size={20} />
+                        </button>
+                        <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center text-black font-black text-xl shadow-[0_0_15px_var(--accent-glow)]">
+                            {profile.name.charAt(0)}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-card p-6 rounded-3xl border border-border shadow-2xl backdrop-blur-md">
+                    <div className="flex justify-between items-center mb-8 border-b border-border pb-6">
+                        <div>
+                            <p className="text-subtext text-xs font-bold uppercase tracking-widest mb-1">{t('bmi')}</p>
+                            <p className={`text-4xl font-black text-accent ${profile.privacyMode ? 'privacy-blur' : ''}`}>{calculateBMI(formData.weightKg, formData.heightCm)}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-subtext text-xs font-bold uppercase tracking-widest mb-1">{t('goal')}</p>
+                            <select 
+                                value={formData.goal} 
+                                onChange={e => setFormData({...formData, goal: e.target.value})}
+                                className="bg-[#536DFE]/20 text-[#536DFE] px-3 py-1 rounded-full text-sm font-bold border border-[#536DFE]/20 outline-none"
+                            >
+                                <option value="Lose Weight">Lose Weight</option>
+                                <option value="Maintain">Maintain</option>
+                                <option value="Gain Muscle">Gain Muscle</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="space-y-8">
+                        <div>
+                            <h3 className="text-xs font-bold text-subtext uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <User size={14} /> {t('bio')}
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">{t('weight')} ({profile.unitSystem === 'metric' ? 'kg' : 'lbs'})</label>
+                                    <input 
+                                        type="number" 
+                                        value={weightVal}
+                                        onChange={e => handleWeightChange(e.target.value)}
+                                        className={`w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent focus:ring-1 focus:ring-accent outline-none font-bold ${profile.privacyMode ? 'privacy-blur' : ''}`}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">{t('height')} ({profile.unitSystem === 'metric' ? 'cm' : 'in'})</label>
+                                    <input 
+                                        type="number" 
+                                        value={heightVal}
+                                        onChange={e => handleHeightChange(e.target.value)}
+                                        className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent focus:ring-1 focus:ring-accent outline-none font-bold"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">Age</label>
+                                    <input 
+                                        type="number" 
+                                        value={formData.age}
+                                        onChange={e => setFormData({...formData, age: parseInt(e.target.value)})}
+                                        className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent outline-none font-bold"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">Gender</label>
+                                    <select 
+                                        value={formData.gender}
+                                        onChange={e => setFormData({...formData, gender: e.target.value})}
+                                        className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent outline-none font-bold"
+                                    >
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="text-xs text-subtext font-bold uppercase">{t('activityLevel')}</label>
+                                    <select 
+                                        value={formData.activityLevel}
+                                        onChange={e => setFormData({...formData, activityLevel: e.target.value})}
+                                        className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent outline-none font-bold"
+                                    >
+                                        <option value="sedentary">Sedentary (Little/No Exercise)</option>
+                                        <option value="light">Light (Exercise 1-3 days/week)</option>
+                                        <option value="moderate">Moderate (Exercise 3-5 days/week)</option>
+                                        <option value="active">Active (Exercise 6-7 days/week)</option>
+                                        <option value="athlete">Athlete (Physical Job/Hard Exercise)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xs font-bold text-subtext uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <Ruler size={14} /> {t('bodyMetrics')}
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">{t('waist')} ({profile.unitSystem === 'metric' ? 'cm' : 'in'})</label>
+                                    <input 
+                                        type="number" 
+                                        value={waistVal}
+                                        onChange={e => handleWaistChange(e.target.value)}
+                                        className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent outline-none font-bold"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">{t('bodyFat')}</label>
+                                    <input 
+                                        type="number" step="0.1"
+                                        value={formData.bodyFatPercentage || ''}
+                                        placeholder="15.0"
+                                        onChange={e => setFormData({...formData, bodyFatPercentage: parseFloat(e.target.value)})}
+                                        className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent outline-none font-bold"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xs font-bold text-subtext uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <Activity size={14} /> {t('dailyGoals')}
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">{t('steps')}</label>
+                                    <input 
+                                        type="number" step="500"
+                                        value={formData.stepGoal}
+                                        onChange={e => setFormData({...formData, stepGoal: parseInt(e.target.value)})}
+                                        className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent outline-none font-bold"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">Calories</label>
+                                    <input 
+                                        type="number" step="50"
+                                        value={formData.calorieGoal}
+                                        onChange={e => setFormData({...formData, calorieGoal: parseInt(e.target.value)})}
+                                        className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent outline-none font-bold"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">{t('sleepGoal')}</label>
+                                    <div className="relative">
+                                        <input 
+                                            type="number" step="0.5"
+                                            value={formData.sleepGoal}
+                                            onChange={e => setFormData({...formData, sleepGoal: parseFloat(e.target.value)})}
+                                            className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent outline-none font-bold pl-9"
+                                        />
+                                        <Moon size={14} className="absolute left-3 top-4 text-subtext" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">{t('waterGoal')}</label>
+                                    <div className="relative">
+                                        <input 
+                                            type="number" step="0.1"
+                                            value={formData.waterGoal}
+                                            onChange={e => setFormData({...formData, waterGoal: parseFloat(e.target.value)})}
+                                            className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent outline-none font-bold pl-9"
+                                        />
+                                        <Droplets size={14} className="absolute left-3 top-4 text-subtext" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xs font-bold text-subtext uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <Clock size={14} /> {t('sleepSchedule')}
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">{t('bedTime')}</label>
+                                    <input 
+                                        type="time" 
+                                        value={formData.bedTime || '23:00'}
+                                        onChange={e => setFormData({...formData, bedTime: e.target.value})}
+                                        className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent outline-none font-bold"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">{t('wakeTime')}</label>
+                                    <input 
+                                        type="time"
+                                        value={formData.wakeTime || '07:00'}
+                                        onChange={e => setFormData({...formData, wakeTime: e.target.value})}
+                                        className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent outline-none font-bold"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 className="text-xs font-bold text-subtext uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <User size={14} /> {t('preferences')}
+                            </h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">{t('diet')}</label>
+                                    <select 
+                                        value={formData.dietaryPreference}
+                                        onChange={e => setFormData({...formData, dietaryPreference: e.target.value})}
+                                        className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent outline-none font-bold"
+                                    >
+                                        <option value="none">None</option>
+                                        <option value="vegan">Vegan</option>
+                                        <option value="vegetarian">Vegetarian</option>
+                                        <option value="keto">Keto</option>
+                                        <option value="paleo">Paleo</option>
+                                        <option value="gluten_free">Gluten Free</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-subtext font-bold uppercase">{t('medical')}</label>
+                                    <textarea 
+                                        value={formData.medicalConditions}
+                                        onChange={e => setFormData({...formData, medicalConditions: e.target.value})}
+                                        placeholder="Allergies, injuries, or conditions..."
+                                        className="w-full bg-white/5 border border-border rounded-xl p-3 text-text mt-1 focus:border-accent outline-none font-medium h-24 resize-none"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <button 
+                        onClick={handleSave}
+                        className={`w-full mt-8 font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg ${saved ? 'bg-green-500 text-black scale-[1.02]' : 'bg-accent text-black hover:brightness-110 hover:scale-[1.01]'}`}
+                    >
+                        <Save size={20} /> {saved ? t('saved') : t('save')}
+                    </button>
+                </div>
+
+                <div className="pt-4 px-2 text-center">
+                    <button onClick={() => { if(confirm(t('resetConfirm'))) resetData(); }} className="flex items-center justify-center gap-2 text-red-400 text-sm font-medium hover:text-red-300 transition-colors opacity-60 hover:opacity-100 mx-auto">
+                        <Trash2 size={16} /> {t('reset')}
+                    </button>
+                </div>
+                </div>
+            );
+        };
+
+        // --- App Layout ---
+        const AppContent = () => {
+            const { profile } = useTracker();
+            const [activeTab, setActiveTab] = useState('home');
+            const [isLoaded, setIsLoaded] = useState(false);
+
+            useEffect(() => {
+                setTimeout(() => setIsLoaded(true), 100);
+            }, []);
+
+            if (!profile.isOnboarded) {
+                return <Onboarding />;
+            }
+
+            const renderContent = () => {
+                return (
+                    <div key={activeTab} className="animate-[fadeIn_0.4s_ease-out]">
+                        {activeTab === 'home' && <Dashboard />}
+                        {activeTab === 'journal' && <Journal />}
+                        {activeTab === 'coach' && <SystemGuide />}
+                        {activeTab === 'hub' && <Hub />}
+                        {activeTab === 'profile' && <Profile />}
+                    </div>
+                );
+            };
+
+            const NavButton = ({ tab, icon: Icon, label }) => {
+                const isActive = activeTab === tab;
+                return (
+                    <button 
+                    onClick={() => {
+                        setActiveTab(tab);
+                        if (navigator.vibrate) navigator.vibrate(10);
+                    }}
+                    className="group relative flex flex-col items-center justify-center w-full h-full"
+                    >
+                    {isActive && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-accent/10 to-transparent rounded-xl animate-[pulse_2s_infinite]" />
+                    )}
+                    <div className={`transition-all duration-500 ease-out transform ${isActive ? '-translate-y-1' : 'group-hover:-translate-y-0.5'}`}>
+                        <Icon 
+                        size={isActive ? 28 : 24} 
+                        className={`transition-all duration-300 ${isActive ? 'stroke-accent drop-shadow-[0_0_15px_var(--accent-glow)]' : 'stroke-subtext group-hover:stroke-text'}`} 
+                        />
+                    </div>
+                    <span className={`text-[10px] font-bold tracking-widest mt-1 transition-all duration-300 ${isActive ? 'text-text scale-100 opacity-100' : 'text-subtext scale-90 opacity-0 md:opacity-100'}`}>
+                        {label}
+                    </span>
+                    <div className={`absolute top-0 w-12 h-0.5 rounded-full bg-accent transition-all duration-500 ${isActive ? 'opacity-100 scale-x-100 shadow-[0_0_10px_var(--accent)]' : 'opacity-0 scale-x-0'}`} />
+                    </button>
+                );
+            };
+
+            return (
+                <div className="w-full h-screen bg-background relative flex flex-col overflow-hidden text-gray-100 selection:bg-accent selection:text-black">
+                <div className="bg-mesh"></div>
+                
+                <header className="px-6 py-4 flex justify-between items-center bg-background/60 backdrop-blur-xl sticky top-0 z-30 border-b border-white/5 transition-all duration-500">
+                    <div className="flex items-center gap-2 group cursor-pointer">
+                        <div className="relative w-8 h-8 flex items-center justify-center bg-gradient-to-tr from-accent to-[#536DFE] rounded-lg shadow-lg group-hover:rotate-12 transition-transform duration-500">
+                            <Sparkles size={16} className="text-white animate-pulse" />
+                        </div>
+                        <h1 className="text-xl md:text-2xl font-black text-text tracking-widest flex items-center gap-1 font-[Space_Grotesk]">
+                        ASCEND<span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-[#536DFE]">.OS</span>
+                        </h1>
+                    </div>
+                    
+                    <div className="hidden md:flex items-center gap-3 px-3 py-1 rounded-full bg-white/5 border border-white/5 backdrop-blur-md shadow-inner">
+                        <span className="w-2 h-2 rounded-full bg-accent animate-[ping_2s_infinite]"></span>
+                        <span className="text-[10px] font-bold text-subtext uppercase tracking-widest">System Online</span>
+                    </div>
+                </header>
+
+                <main className={`flex-1 overflow-y-auto px-4 md:px-8 pt-6 pb-32 custom-scrollbar relative z-10 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+                    {renderContent()}
+                </main>
+
+                <div className="fixed bottom-6 left-0 right-0 z-40 px-4 md:px-0 flex justify-center pointer-events-none">
+                    <nav className="pointer-events-auto bg-card/70 backdrop-blur-2xl border border-white/10 h-[72px] w-full max-w-lg rounded-[2rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] flex items-center justify-between px-2 md:px-6 transition-all duration-300 hover:shadow-[0_20px_50px_-10px_var(--accent-glow)] ring-1 ring-white/5">
+                        <NavButton tab="home" icon={Home} label="HOME" />
+                        <NavButton tab="hub" icon={Grid} label="HUB" />
+                        <NavButton tab="coach" icon={Bot} label="AI SYS" />
+                        <NavButton tab="journal" icon={Calendar} label="LOGS" />
+                        <NavButton tab="profile" icon={User} label="BIO" />
+                    </nav>
+                </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [currentUser, setCurrentUser] = useState(null);
+
+            useEffect(() => {
+                const storedUser = localStorage.getItem('ascend_current_user');
+                if (storedUser) {
+                    setCurrentUser(JSON.parse(storedUser));
+                }
+            }, []);
+
+            const handleLogin = (user) => {
+                localStorage.setItem('ascend_current_user', JSON.stringify(user));
+                setCurrentUser(user);
+            };
+
+            const handleLogout = () => {
+                localStorage.removeItem('ascend_current_user');
+                setCurrentUser(null);
+            };
+
+            if (!currentUser) {
+                return <AuthScreen onLogin={handleLogin} />;
+            }
+
+            return (
+                <TrackerProvider user={currentUser} onLogout={handleLogout}>
+                    <AppContent />
+                </TrackerProvider>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+    </script>
+</body>
+</html>
